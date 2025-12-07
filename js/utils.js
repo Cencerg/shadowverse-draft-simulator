@@ -200,83 +200,210 @@ function displayDeck(deck, selectedClass, container, isModal = false) {
     
     const sortedCosts = Object.keys(cardsByCost).map(Number).sort((a, b) => a - b);
     
-    // 为每个费用创建部分
-    const sectionClass = isModal ? 'modal-cards-section' : 'deck-display-cost-section';
-    const titleClass = isModal ? 'modal-cards-title' : 'deck-display-cost-title';
-    const gridClass = isModal ? 'modal-cards-grid' : 'deck-display-cards';
-    const itemClass = isModal ? 'modal-card-item' : 'deck-display-card-item';
-    const imageClass = isModal ? 'modal-card-image' : 'deck-display-card-image';
-    const countClass = isModal ? 'modal-card-count' : 'deck-display-card-count';
-    const infoClass = isModal ? 'modal-card-info' : 'deck-display-card-info';
-    
-    sortedCosts.forEach(cost => {
-        const costSection = document.createElement('div');
-        costSection.className = sectionClass;
+    if (isModal) {
+        // 模态框保持原来的按费用分栏显示
+        const sectionClass = 'modal-cards-section';
+        const titleClass = 'modal-cards-title';
+        const gridClass = 'modal-cards-grid';
+        const itemClass = 'modal-card-item';
+        const imageClass = 'modal-card-image';
+        const countClass = 'modal-card-count';
+        const infoClass = 'modal-card-info';
         
-        // 创建费用标题 - 使用更小的字体
-        const costTitle = document.createElement('div');
-        costTitle.className = titleClass;
+        sortedCosts.forEach(cost => {
+            const costSection = document.createElement('div');
+            costSection.className = sectionClass;
+            
+            // 创建费用标题 - 使用更小的字体
+            const costTitle = document.createElement('div');
+            costTitle.className = titleClass;
+            
+            const costText = document.createElement('span');
+            costText.textContent = `费用 ${cost}`;
+            costText.style.fontSize = '0.9rem'; // 减小字体大小
+            costText.style.opacity = '0.7'; // 降低不透明度
+            costTitle.appendChild(costText);
+            
+            costSection.appendChild(costTitle);
+            
+            // 创建卡牌网格 - 使用更大的卡牌尺寸
+            const cardsGrid = document.createElement('div');
+            cardsGrid.className = gridClass;
+            
+            // 获取该费用的所有卡牌
+            const cards = Object.values(cardsByCost[cost]);
+            cards.sort((a, b) => a.card.name.localeCompare(b.card.name, 'zh-CN'));
+            
+            // 添加卡牌到网格
+            cards.forEach(cardData => {
+                const card = cardData.card;
+                const count = cardData.count;
+                const cardClass = cardData.cardClass || selectedClass;
+                
+                const cardElement = document.createElement('div');
+                cardElement.className = itemClass;
+                
+                const img = document.createElement('img');
+                const imagePath = `images/${cardClass}/${card.name}.png`;
+                img.src = imagePath;
+                img.alt = card.name;
+                img.className = imageClass;
+                
+                img.style.width = '90px'; // 增加模态框卡牌宽度
+                img.style.height = '126px'; // 按比例增加高度
+                
+                img.onerror = function() {
+                    console.warn(`卡牌图片加载失败: ${imagePath}`);
+                    this.style.backgroundColor = '#333355';
+                    this.style.width = '90px';
+                    this.style.height = '126px';
+                };
+                
+                const countElement = document.createElement('div');
+                countElement.className = countClass;
+                countElement.textContent = `${count}`;
+                
+                const infoElement = document.createElement('div');
+                infoElement.className = infoClass;
+                infoElement.textContent = card.name.length > 8 ? card.name.substring(0, 8) + '...' : card.name;
+                
+                cardElement.appendChild(img);
+                cardElement.appendChild(countElement);
+                cardElement.appendChild(infoElement);
+                
+                cardsGrid.appendChild(cardElement);
+            });
+            
+            costSection.appendChild(cardsGrid);
+            container.appendChild(costSection);
+        });
+    } else {
+        // 完成界面：不按费用分栏，所有卡牌按费用从低到高排序，从左到右从上到下排列
+        // 收集所有卡牌并排序
+        const allCards = [];
+        sortedCosts.forEach(cost => {
+            const cards = Object.values(cardsByCost[cost]);
+            cards.sort((a, b) => a.card.name.localeCompare(b.card.name, 'zh-CN'));
+            allCards.push(...cards);
+        });
         
-        const costText = document.createElement('span');
-        costText.textContent = `费用 ${cost}`;
-        costText.style.fontSize = '0.9rem'; // 减小字体大小
-        costText.style.opacity = '0.7'; // 降低不透明度
-        costTitle.appendChild(costText);
-        
-        costSection.appendChild(costTitle);
-        
-        // 创建卡牌网格 - 使用更大的卡牌尺寸
+        // 创建一个大的网格容器 - 修复：调整卡牌尺寸和网格布局，防止出现水平滚动条
         const cardsGrid = document.createElement('div');
-        cardsGrid.className = gridClass;
-        
-        // 获取该费用的所有卡牌
-        const cards = Object.values(cardsByCost[cost]);
-        cards.sort((a, b) => a.card.name.localeCompare(b.card.name, 'zh-CN'));
+        cardsGrid.className = 'completion-cards-grid';
+        cardsGrid.style.cssText = `
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(95px, 1fr)); /* 减小最小宽度 */
+            gap: 10px; /* 减小间隙 */
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            overflow-x: hidden; /* 防止水平滚动 */
+            padding: 12px; /* 减小内边距 */
+            justify-content: center;
+            background: rgba(40, 40, 80, 0.15);
+            border-radius: 10px;
+            box-sizing: border-box; /* 确保内边距包含在宽度内 */
+        `;
         
         // 添加卡牌到网格
-        cards.forEach(cardData => {
+        allCards.forEach(cardData => {
             const card = cardData.card;
             const count = cardData.count;
             const cardClass = cardData.cardClass || selectedClass;
             
             const cardElement = document.createElement('div');
-            cardElement.className = itemClass;
+            cardElement.className = 'completion-card-item';
+            cardElement.style.cssText = `
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                position: relative;
+                margin: 0;
+                width: 95px; /* 固定宽度 */
+            `;
             
             const img = document.createElement('img');
             const imagePath = `images/${cardClass}/${card.name}.png`;
             img.src = imagePath;
             img.alt = card.name;
-            img.className = imageClass;
-            
-            // 为模态框和完成界面设置更大的卡牌尺寸
-            if (isModal) {
-                img.style.width = '90px'; // 增加模态框卡牌宽度
-                img.style.height = '126px'; // 按比例增加高度
-            } else {
-                img.style.width = '100px'; // 增加完成界面卡牌宽度
-                img.style.height = '140px'; // 按比例增加高度
-            }
+            img.className = 'completion-card-image';
+            img.style.cssText = `
+                width: 95px; /* 减小卡牌宽度 */
+                height: 133px; /* 按比例减小高度 */
+                object-fit: contain;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.7);
+                transition: transform 0.2s, box-shadow 0.2s;
+                background-color: transparent;
+                border-radius: 8px;
+                margin: 0;
+                cursor: pointer;
+            `;
             
             img.onerror = function() {
                 console.warn(`卡牌图片加载失败: ${imagePath}`);
                 this.style.backgroundColor = '#333355';
-                // 保持调整后的大小即使加载失败
-                if (isModal) {
-                    this.style.width = '90px';
-                    this.style.height = '126px';
-                } else {
-                    this.style.width = '100px';
-                    this.style.height = '140px';
-                }
+                this.style.width = '95px';
+                this.style.height = '133px';
             };
             
+            // 鼠标悬停效果
+            img.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-6px) scale(1.08)';
+                this.style.boxShadow = '0 12px 25px rgba(0, 0, 0, 0.9)';
+                this.style.zIndex = '100';
+            });
+            
+            img.addEventListener('mouseleave', function() {
+                this.style.transform = '';
+                this.style.boxShadow = '0 5px 15px rgba(0, 0, 0, 0.7)';
+                this.style.zIndex = '1';
+            });
+            
             const countElement = document.createElement('div');
-            countElement.className = countClass;
+            countElement.className = 'completion-card-count';
             countElement.textContent = `${count}`;
+            countElement.style.cssText = `
+                position: absolute;
+                top: -8px;
+                right: -8px;
+                background: linear-gradient(135deg, #ffd700, #ffaa00);
+                color: #333;
+                font-weight: bold;
+                padding: 2px 8px;
+                border-radius: 50%;
+                font-size: 0.85rem;
+                min-width: 26px;
+                height: 26px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+                z-index: 101;
+                border: 2px solid #333;
+            `;
             
             const infoElement = document.createElement('div');
-            infoElement.className = infoClass;
-            infoElement.textContent = card.name.length > 8 ? card.name.substring(0, 8) + '...' : card.name;
+            infoElement.className = 'completion-card-info';
+            infoElement.textContent = card.name.length > 10 ? card.name.substring(0, 10) + '...' : card.name;
+            infoElement.style.cssText = `
+                font-size: 0.8rem;
+                color: #fff;
+                text-align: center;
+                margin-top: 6px;
+                max-width: 95px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                font-weight: 600;
+                font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+                line-height: 1.2;
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+                background: rgba(0, 0, 0, 0.3);
+                padding: 3px 5px;
+                border-radius: 5px;
+                width: 100%;
+                box-sizing: border-box;
+            `;
             
             cardElement.appendChild(img);
             cardElement.appendChild(countElement);
@@ -285,7 +412,6 @@ function displayDeck(deck, selectedClass, container, isModal = false) {
             cardsGrid.appendChild(cardElement);
         });
         
-        costSection.appendChild(cardsGrid);
-        container.appendChild(costSection);
-    });
+        container.appendChild(cardsGrid);
+    }
 }
