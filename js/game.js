@@ -751,95 +751,157 @@ function updateDeckInfo() {
         showCompletion();
     }
 }
-
 // 显示完成界面
 function showCompletion() {
+    // 隐藏所有不必要的元素
+    const selectionHeader = document.querySelector('.selection-header');
+    const progressContainer = document.querySelector('.progress-container');
+    const selectionArea = document.querySelector('.selection-area');
+    const deckDisplayHeader = document.querySelector('.deck-display-header');
+    
+    if (selectionHeader) selectionHeader.style.display = 'none';
+    if (progressContainer) progressContainer.style.display = 'none';
+    if (selectionArea) selectionArea.style.display = 'none';
+    if (deckDisplayHeader) deckDisplayHeader.style.display = 'none'; // 隐藏"我的卡组"标题和关闭按钮
+    
     roundInfo.style.display = 'none';
-    document.querySelector('.selection-area').style.display = 'none';
     refreshButton.style.display = 'none';
     confirmButton.style.display = 'none';
     viewDeckButton.style.display = 'none';
     
-    // 直接显示卡组
+    // 显示重新开始按钮，并放在顶部
     restartButton.style.display = 'flex';
+    restartButton.style.margin = '20px auto'; // 居中显示
+    restartButton.style.order = '-1'; // 确保按钮在顶部
     
+    // 调整显示容器的大小和位置 - 修复：防止出现水平滚动条
+    deckDisplayContainer.style.cssText = `
+        display: block;
+        margin-top: 10px;
+        padding: 15px;
+        border-radius: 12px;
+        background: rgba(26, 26, 58, 0.95);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+        max-height: 85vh;
+        overflow-y: auto;
+        overflow-x: hidden; /* 防止水平滚动 */
+        width: 100%;
+        border: 3px solid #4CAF50;
+        position: relative;
+        box-sizing: border-box; /* 确保内边距包含在宽度内 */
+    `;
+    
+    // 调整内容区域 - 使用适当的宽度，防止溢出
+    deckDisplayContent.style.cssText = `
+        width: 100%;
+        margin: 0 auto;
+        padding: 0;
+        box-sizing: border-box; /* 确保内边距包含在宽度内 */
+        overflow-x: hidden; /* 防止水平滚动 */
+    `;
+    
+    // 显示卡组
     displayDeck(gameState.deck, gameState.selectedClass, deckDisplayContent, false);
-    deckDisplayContainer.style.display = 'block';
     
     // 修改轮次信息为完成提示
     roundInfo.style.display = 'block';
     roundInfo.textContent = '卡组构建完成！';
     roundInfo.style.color = '#ffd700';
-    roundInfo.style.fontSize = '1.4rem';
+    roundInfo.style.fontSize = '1.6rem';
     roundInfo.style.fontWeight = 'bold';
+    roundInfo.style.marginTop = '10px';
+    roundInfo.style.marginBottom = '20px';
+    roundInfo.style.textAlign = 'center';
+    roundInfo.style.textShadow = '0 0 10px rgba(255, 215, 0, 0.5)';
     
+    // 自动滚动到卡组显示区域
     setTimeout(() => {
         deckDisplayContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 200); // 缩短到200ms
+    }, 100);
 }
-
-// 重置游戏（带页面过渡动画）
+// 显示模态框卡组
+function displayModalDeck() {
+    displayDeck(gameState.deck, gameState.selectedClass, modalDeckContent, true);
+}
+// 重置游戏
 function resetGame() {
+    // 显示页面过渡动画
     showPageTransition(() => {
+        // 重置游戏状态
         gameState.deck = [];
         gameState.selectionRound = 0;
         gameState.selectedSide = null;
         gameState.currentLeftCards = [];
         gameState.currentRightCards = [];
-        gameState.classIndex = 0;
-        gameState.selectedClass = GAME_CONFIG.classes[0];
-        gameState.refreshCounts = {...GAME_CONFIG.refreshCounts};
-        gameState.isAnimating = false;
-        gameState.isDeckAnimating = false;
         
-        // 重新生成封面卡牌
+        // 重置刷新次数
+        gameState.refreshCounts = {...GAME_CONFIG.refreshCounts};
+        
+        // 重置组卡界面显示
+        const selectionHeader = document.querySelector('.selection-header');
+        const progressContainer = document.querySelector('.progress-container');
+        const selectionArea = document.querySelector('.selection-area');
+        const deckDisplayHeader = document.querySelector('.deck-display-header');
+        
+        if (selectionHeader) selectionHeader.style.display = '';
+        if (progressContainer) progressContainer.style.display = '';
+        if (selectionArea) selectionArea.style.display = '';
+        if (deckDisplayHeader) deckDisplayHeader.style.display = '';
+        
+        // 重新显示按钮
+        roundInfo.style.display = 'block';
+        refreshButton.style.display = '';
+        confirmButton.style.display = '';
+        viewDeckButton.style.display = '';
+        restartButton.style.display = 'none'; // 隐藏重新开始按钮
+        
+        // 重置轮次信息
+        roundInfo.textContent = `第 1 轮 / 共 ${GAME_CONFIG.maxRounds} 轮`;
+        roundInfo.style.cssText = ''; // 清除完成界面的样式
+        
+        // 清空卡牌容器
+        leftCardsContainer.innerHTML = '';
+        rightCardsContainer.innerHTML = '';
+        
+        // 隐藏卡组显示容器
+        deckDisplayContainer.style.display = 'none';
+        
+        // 重置进度条
+        progressBar.style.width = '5%';
+        
+        // 移除完成界面的类
+        deckbuildingScreen.classList.remove('completed');
+        
+        // 重置按钮点击状态
+        gameState.isDeckAnimating = false;
+        refreshButton.disabled = false;
+        confirmButton.disabled = true;
+        leftSide.style.pointerEvents = 'auto';
+        rightSide.style.pointerEvents = 'auto';
+        
+        // 重置选择状态
+        leftSide.classList.remove('selected');
+        rightSide.classList.remove('selected');
+        
+        // 重新生成所有职业的封面卡牌
         regenerateCoverCards();
         
+        // 重置职业选择界面
+        gameState.classIndex = 0;
+        updateCoverCards();
+        
+        // 切换到职业选择界面
         deckbuildingScreen.style.display = 'none';
         selectionScreen.style.display = 'flex';
         gameState.currentScreen = "selection";
         
-        updateCoverCards();
-        
-        deckDisplayContainer.style.display = 'none';
+        // 隐藏模态框（如果有打开的话）
         deckModal.style.display = 'none';
         
-        roundInfo.style.display = 'block';
-        roundInfo.textContent = `第 1 轮 / 共 ${GAME_CONFIG.maxRounds} 轮`;
-        roundInfo.style.color = '#aaa';
-        roundInfo.style.fontSize = '1.2rem';
-        roundInfo.style.fontWeight = 'normal';
-        
-        document.querySelector('.selection-area').style.display = 'flex';
-        refreshButton.style.display = 'flex';
-        confirmButton.style.display = 'flex';
-        viewDeckButton.style.display = 'flex';
-        restartButton.style.display = 'none';
-        
-        // 恢复按钮和侧边状态
-        refreshButton.disabled = false;
-        confirmButton.disabled = false;
-        leftSide.style.pointerEvents = 'auto';
-        rightSide.style.pointerEvents = 'auto';
-        
-        updateDeckInfo();
-        
-        // 返回职业选择界面时，背景保持暗色（选卡环节的设定）
-        document.body.classList.remove('cover-mode');
-        
-        // 添加进入动画
-        selectionScreen.style.opacity = '0';
-        selectionScreen.style.transform = 'translateY(20px)';
-        
-        setTimeout(() => {
-            selectionScreen.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-            selectionScreen.style.opacity = '1';
-            selectionScreen.style.transform = 'translateY(0)';
-        }, 30); // 缩短等待时间
+        // 更新职业选择界面信息
+        const currentClass = GAME_CONFIG.classes[gameState.classIndex];
+        gameState.selectedClass = currentClass;
+        className.textContent = currentClass;
+        refreshCount.textContent = `刷新次数: ${gameState.refreshCounts[currentClass]}次`;
     });
-}
-
-// 显示模态框卡组
-function displayModalDeck() {
-    displayDeck(gameState.deck, gameState.selectedClass, modalDeckContent, true);
 }
