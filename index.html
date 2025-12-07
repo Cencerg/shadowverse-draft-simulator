@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>影之诗超凡世界双选组卡</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 封面界面 -->
+        <div class="cover-screen" id="coverScreen">
+            <div class="title-image-container">
+                <img src="images/其他/标题.png" alt="影之诗超凡世界双选组卡" class="title-image">
+            </div>
+            <div class="start-prompt" id="startPrompt">
+                <i class="fas fa-play-circle"></i> 点击此处开始
+            </div>
+        </div>
+        
+        <!-- 职业选择界面 -->
+        <div class="selection-screen" id="selectionScreen">
+            <div class="header">
+                <h2>选择你的职业</h2>
+            </div>
+            
+            <div class="class-selector">
+                <button class="nav-button" id="prevClass">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                
+                <div class="class-info">
+                    <div class="class-name-container">
+                        <div class="class-name" id="className">妖精</div>
+                    </div>
+                    <div class="refresh-info" id="refreshCount">刷新次数: 7次</div>
+                </div>
+                
+                <button class="nav-button" id="nextClass">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+            
+            <div class="cover-cards-container">
+                <div class="cover-cards" id="coverCards">
+                    <div class="cover-card" id="coverCard1"></div>
+                    <div class="cover-card" id="coverCard2"></div>
+                </div>
+            </div>
+            
+            <div class="selection-controls">
+                <button class="action-button select-button" id="selectClassButton">
+                    <i class="fas fa-check"></i> 选择此职业以开始
+                </button>
+            </div>
+        </div>
+        
+        <!-- 组卡界面 -->
+        <div class="deckbuilding-screen" id="deckbuildingScreen">
+            <div class="selection-header">
+                <div>
+                    <h2 id="currentClassName">妖精 - 组卡</h2>
+                    <div class="selection-info">选择一侧的两张卡牌加入你的卡组</div>
+                </div>
+                <div>
+                    <div class="deck-count">卡组: <span id="deckCount">2</span>/40</div>
+                    <div class="refresh-info" id="currentRefreshCount">刷新次数: 7次</div>
+                </div>
+            </div>
+            
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            
+            <div class="selection-area">
+                <div class="selection-side" id="leftSide">
+                    <div class="side-label">左侧卡牌</div>
+                    <div class="selection-cards" id="leftCards"></div>
+                </div>
+                
+                <div class="selection-side" id="rightSide">
+                    <div class="side-label">右侧卡牌</div>
+                    <div class="selection-cards" id="rightCards"></div>
+                </div>
+            </div>
+            
+            <div class="round-info" id="roundInfo">第 1 轮 / 共 19 轮</div>
+            
+            <div class="selection-controls-deck">
+                <button class="action-button refresh-button" id="refreshButton">
+                    <i class="fas fa-redo"></i> 刷新卡牌
+                </button>
+                <button class="action-button confirm-button" id="confirmButton" disabled>
+                    <i class="fas fa-check"></i> 确认选择
+                </button>
+                <button class="action-button view-deck-button" id="viewDeckButton">
+                    <i class="fas fa-eye"></i> 查看卡组
+                </button>
+                <button class="action-button restart-button" id="restartButton">
+                    <i class="fas fa-redo"></i> 重新开始组卡
+                </button>
+            </div>
+            
+            <div class="deck-display-container" id="deckDisplayContainer">
+                <div class="deck-display-header">
+                    <h2 class="deck-display-title">我的卡组</h2>
+                    <button class="action-button refresh-button" id="closeDeckButton">
+                        <i class="fas fa-times"></i> 关闭
+                    </button>
+                </div>
+                <div id="deckDisplayContent"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 查看卡组模态框 -->
+    <div class="modal-overlay" id="deckModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">
+                    <i class="fas fa-eye"></i> 当前卡组预览
+                </h2>
+                <button class="modal-close" id="closeModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="modalDeckContent"></div>
+        </div>
+    </div>
+
+    <!-- JavaScript 文件 -->
+    <script src="js/data.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>
