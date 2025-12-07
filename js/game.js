@@ -448,7 +448,7 @@ function generateCardsForRound(requiredRarity) {
         let attempts = 0;
         
         do {
-            leftCard = getRandomCard(requiredRarity, gameState.selectedClass, ALL_CARDS);
+            leftCard = getRandomCard(requiredRarity, gameState.selectedClass, ALL_CARDS, gameState.deck);
             attempts++;
             if (attempts >= 50) break;
         } while (usedCards.has(`${leftCard.name}|${leftCard.class}`));
@@ -463,7 +463,7 @@ function generateCardsForRound(requiredRarity) {
         let attempts = 0;
         
         do {
-            rightCard = getRandomCard(requiredRarity, gameState.selectedClass, ALL_CARDS);
+            rightCard = getRandomCard(requiredRarity, gameState.selectedClass, ALL_CARDS, gameState.deck);
             attempts++;
             if (attempts >= 50) break;
         } while (usedCards.has(`${rightCard.name}|${rightCard.class}`));
@@ -491,7 +491,7 @@ function generateCardsForRoundWithAnimation(requiredRarity) {
         let attempts = 0;
         
         do {
-            leftCard = getRandomCard(requiredRarity, gameState.selectedClass, ALL_CARDS);
+            leftCard = getRandomCard(requiredRarity, gameState.selectedClass, ALL_CARDS, gameState.deck);
             attempts++;
             if (attempts >= 50) break;
         } while (usedCards.has(`${leftCard.name}|${leftCard.class}`));
@@ -506,7 +506,7 @@ function generateCardsForRoundWithAnimation(requiredRarity) {
         let attempts = 0;
         
         do {
-            rightCard = getRandomCard(requiredRarity, gameState.selectedClass, ALL_CARDS);
+            rightCard = getRandomCard(requiredRarity, gameState.selectedClass, ALL_CARDS, gameState.deck);
             attempts++;
             if (attempts >= 50) break;
         } while (usedCards.has(`${rightCard.name}|${rightCard.class}`));
@@ -543,7 +543,7 @@ function generateCardsForRoundWithRefreshAnimation() {
         let attempts = 0;
         
         do {
-            leftCard = getRandomCardByRefresh(gameState.selectedClass, ALL_CARDS);
+            leftCard = getRandomCardByRefresh(gameState.selectedClass, ALL_CARDS, gameState.deck);
             attempts++;
             if (attempts >= 50) break;
         } while (usedCards.has(`${leftCard.name}|${leftCard.class}`));
@@ -558,7 +558,7 @@ function generateCardsForRoundWithRefreshAnimation() {
         let attempts = 0;
         
         do {
-            rightCard = getRandomCardByRefresh(gameState.selectedClass, ALL_CARDS);
+            rightCard = getRandomCardByRefresh(gameState.selectedClass, ALL_CARDS, gameState.deck);
             attempts++;
             if (attempts >= 50) break;
         } while (usedCards.has(`${rightCard.name}|${rightCard.class}`));
