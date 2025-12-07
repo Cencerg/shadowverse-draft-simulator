@@ -1,3 +1,4 @@
+
 // 工具函数集合
 
 // 创建卡牌图片元素
@@ -29,8 +30,8 @@ function createSelectionCardElement(card, container, className) {
     container.appendChild(cardElement);
 }
 
-// 获取随机卡牌
-function getRandomCard(requiredRarity, selectedClass, cardPool) {
+// 获取随机卡牌（添加同名卡限制：最多3张）
+function getRandomCard(requiredRarity, selectedClass, cardPool, currentDeck = []) {
     let actualRarity;
     if (requiredRarity === "金及以上") {
         actualRarity = Math.random() < 0.6 ? "金" : "虹";
@@ -54,14 +55,43 @@ function getRandomCard(requiredRarity, selectedClass, cardPool) {
         pool = cardPool[selectedClass];
     }
     
-    const randomCard = {...pool[Math.floor(Math.random() * pool.length)]};
-    randomCard.class = isNeutral ? "中立" : selectedClass;
+    // 计算当前卡组中每张卡的数量
+    const cardCounts = {};
+    currentDeck.forEach(card => {
+        const key = `${card.name}|${card.class || selectedClass}`;
+        cardCounts[key] = (cardCounts[key] || 0) + 1;
+    });
+    
+    // 过滤掉已经达到3张的卡牌
+    const availablePool = pool.filter(card => {
+        const cardClass = isNeutral ? "中立" : selectedClass;
+        const key = `${card.name}|${cardClass}`;
+        return (cardCounts[key] || 0) < 3;
+    });
+    
+    // 如果可用卡池为空，则使用原始卡池
+    const finalPool = availablePool.length > 0 ? availablePool : pool;
+    
+    let randomCard;
+    let attempts = 0;
+    const maxAttempts = 50; // 防止无限循环
+    
+    do {
+        randomCard = {...finalPool[Math.floor(Math.random() * finalPool.length)]};
+        randomCard.class = isNeutral ? "中立" : selectedClass;
+        attempts++;
+        
+        // 如果尝试次数过多，直接返回当前卡牌
+        if (attempts >= maxAttempts) {
+            break;
+        }
+    } while ((cardCounts[`${randomCard.name}|${randomCard.class}`] || 0) >= 3);
     
     return randomCard;
 }
 
-// 根据刷新概率获取随机卡牌
-function getRandomCardByRefresh(selectedClass, cardPool) {
+// 根据刷新概率获取随机卡牌（添加同名卡限制：最多3张）
+function getRandomCardByRefresh(selectedClass, cardPool, currentDeck = []) {
     const refreshRarities = ["铜", "银", "金", "虹"];
     const refreshProbabilities = [15, 20, 30, 35];
     
@@ -93,8 +123,37 @@ function getRandomCardByRefresh(selectedClass, cardPool) {
         pool = cardPool[selectedClass];
     }
     
-    const randomCard = {...pool[Math.floor(Math.random() * pool.length)]};
-    randomCard.class = isNeutral ? "中立" : selectedClass;
+    // 计算当前卡组中每张卡的数量
+    const cardCounts = {};
+    currentDeck.forEach(card => {
+        const key = `${card.name}|${card.class || selectedClass}`;
+        cardCounts[key] = (cardCounts[key] || 0) + 1;
+    });
+    
+    // 过滤掉已经达到3张的卡牌
+    const availablePool = pool.filter(card => {
+        const cardClass = isNeutral ? "中立" : selectedClass;
+        const key = `${card.name}|${cardClass}`;
+        return (cardCounts[key] || 0) < 3;
+    });
+    
+    // 如果可用卡池为空，则使用原始卡池
+    const finalPool = availablePool.length > 0 ? availablePool : pool;
+    
+    let randomCard;
+    let attempts = 0;
+    const maxAttempts = 50; // 防止无限循环
+    
+    do {
+        randomCard = {...finalPool[Math.floor(Math.random() * finalPool.length)]};
+        randomCard.class = isNeutral ? "中立" : selectedClass;
+        attempts++;
+        
+        // 如果尝试次数过多，直接返回当前卡牌
+        if (attempts >= maxAttempts) {
+            break;
+        }
+    } while ((cardCounts[`${randomCard.name}|${randomCard.class}`] || 0) >= 3);
     
     return randomCard;
 }
