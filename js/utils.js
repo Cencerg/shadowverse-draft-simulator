@@ -1,7 +1,127 @@
 
 // 工具函数集合
 
-// 创建卡牌图片元素
+// 卡牌信息提示系统
+const cardTooltip = {
+    tooltip: null,
+    timer: null,
+    isInitialized: false,
+    
+    init: function() {
+        if (this.isInitialized) return;
+        
+        // 创建工具提示元素
+        this.tooltip = document.getElementById('cardTooltip');
+        if (!this.tooltip) {
+            this.createTooltip();
+        }
+        this.isInitialized = true;
+    },
+    
+    createTooltip: function() {
+        this.tooltip = document.createElement('div');
+        this.tooltip.className = 'card-tooltip';
+        this.tooltip.id = 'cardTooltip';
+        this.tooltip.innerHTML = `
+            <div class="tooltip-content">
+                <div class="tooltip-description" id="tooltipCardDescription">卡牌描述信息</div>
+            </div>
+        `;
+        document.body.appendChild(this.tooltip);
+    },
+    
+    show: function(card, className, event) {
+        if (!this.tooltip) this.init();
+        
+        // 清除之前的定时器
+        if (this.timer) {
+            clearTimeout(this.timer);
+            this.timer = null;
+        }
+        
+        // 只设置卡牌描述信息，并在每个 \n 后添加分割线
+        let cardDescription = card.description || "暂无详细描述";
+        //设置 \\n 为普通换行
+        cardDescription = cardDescription.replace(/\\\\n/g, '<br>');
+        
+        // 将 \n 替换为 \n<hr class="tooltip-divider">
+        cardDescription = cardDescription.replace(/\n/g, '\n<hr class="tooltip-divider">');
+        
+        const formattedDescription = cardDescription.replace(
+        /【(.*?)】/g, 
+        '<span class="bracket-text">【$1】</span>'
+);
+document.getElementById('tooltipCardDescription').innerHTML = formattedDescription;
+        
+        // 显示工具提示
+        this.tooltip.style.display = 'block';
+        
+        // 定位工具提示
+        this.positionTooltip(event);
+        
+        // 添加鼠标移动事件监听器
+        document.addEventListener('mousemove', this.positionTooltip.bind(this));
+    },
+    
+    positionTooltip: function(event) {
+        if (!this.tooltip || this.tooltip.style.display !== 'block') return;
+        
+        const tooltipWidth = this.tooltip.offsetWidth;
+        const tooltipHeight = this.tooltip.offsetHeight;
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        
+        let x = event.clientX + 15;
+        let y = event.clientY + 15;
+        
+        // 确保工具提示不会超出屏幕边界
+        if (x + tooltipWidth > windowWidth) {
+            x = event.clientX - tooltipWidth - 15;
+        }
+        
+        if (y + tooltipHeight > windowHeight) {
+            y = event.clientY - tooltipHeight - 15;
+        }
+        
+        // 确保最小位置
+        x = Math.max(10, x);
+        y = Math.max(10, y);
+        
+        this.tooltip.style.left = x + 'px';
+        this.tooltip.style.top = y + 'px';
+    },
+    
+    hide: function() {
+        if (!this.tooltip) return;
+        
+        // 使用延迟隐藏，防止快速移动时闪烁
+        this.timer = setTimeout(() => {
+            if (this.tooltip) {
+                this.tooltip.style.display = 'none';
+                document.removeEventListener('mousemove', this.positionTooltip.bind(this));
+            }
+        }, 100);
+    },
+    
+    hideImmediately: function() {
+        if (!this.tooltip) return;
+        
+        if (this.timer) {
+            clearTimeout(this.timer);
+            this.timer = null;
+        }
+        
+        this.tooltip.style.display = 'none';
+        document.removeEventListener('mousemove', this.positionTooltip.bind(this));
+    }
+};
+
+// 初始化卡牌信息提示系统
+document.addEventListener('DOMContentLoaded', function() {
+    cardTooltip.init();
+});
+
+// 创建卡牌图片元素（添加悬停事件）
 function createCardImage(card, className) {
     const img = document.createElement('img');
     const cardClass = card.class || className;
@@ -15,6 +135,19 @@ function createCardImage(card, className) {
         console.warn(`卡牌图片加载失败: ${imagePath}`);
         this.style.backgroundColor = '#333355';
     };
+    
+    // 添加鼠标悬停事件
+    img.addEventListener('mouseenter', function(event) {
+        cardTooltip.show(card, cardClass, event);
+    });
+    
+    img.addEventListener('mouseleave', function() {
+        cardTooltip.hide();
+    });
+    
+    img.addEventListener('mousemove', function(event) {
+        cardTooltip.positionTooltip(event);
+    });
     
     return img;
 }
@@ -232,7 +365,19 @@ function displayDeck(deck, selectedClass, container, isModal = false) {
             
             // 获取该费用的所有卡牌
             const cards = Object.values(cardsByCost[cost]);
-            cards.sort((a, b) => a.card.name.localeCompare(b.card.name, 'zh-CN'));
+            
+            // 按新规则排序：先中立卡，后职业卡；各自按id排序
+            cards.sort((a, b) => {
+                const aIsNeutral = a.cardClass === "中立";
+                const bIsNeutral = b.cardClass === "中立";
+                
+                // 中立卡在前，职业卡在后
+                if (aIsNeutral && !bIsNeutral) return -1;
+                if (!aIsNeutral && bIsNeutral) return 1;
+                
+                // 都是中立卡或都是职业卡，按id排序
+                return a.card.id - b.card.id;
+            });
             
             // 添加卡牌到网格
             cards.forEach(cardData => {
@@ -243,10 +388,8 @@ function displayDeck(deck, selectedClass, container, isModal = false) {
                 const cardElement = document.createElement('div');
                 cardElement.className = itemClass;
                 
-                const img = document.createElement('img');
-                const imagePath = `images/${cardClass}/${card.name}.png`;
-                img.src = imagePath;
-                img.alt = card.name;
+                // 使用createCardImage函数，自动包含悬停事件
+                const img = createCardImage(card, cardClass);
                 img.className = imageClass;
                 
                 img.style.width = '90px'; // 增加模态框卡牌宽度
@@ -283,7 +426,18 @@ function displayDeck(deck, selectedClass, container, isModal = false) {
         const allCards = [];
         sortedCosts.forEach(cost => {
             const cards = Object.values(cardsByCost[cost]);
-            cards.sort((a, b) => a.card.name.localeCompare(b.card.name, 'zh-CN'));
+            // 按新规则排序：先中立卡，后职业卡；各自按id排序
+            cards.sort((a, b) => {
+                const aIsNeutral = a.cardClass === "中立";
+                const bIsNeutral = b.cardClass === "中立";
+                
+                // 中立卡在前，职业卡在后
+                if (aIsNeutral && !bIsNeutral) return -1;
+                if (!aIsNeutral && bIsNeutral) return 1;
+                
+                // 都是中立卡或都是职业卡，按id排序
+                return a.card.id - b.card.id;
+            });
             allCards.push(...cards);
         });
         
@@ -322,10 +476,8 @@ function displayDeck(deck, selectedClass, container, isModal = false) {
                 width: 95px; /* 固定宽度 */
             `;
             
-            const img = document.createElement('img');
-            const imagePath = `images/${cardClass}/${card.name}.png`;
-            img.src = imagePath;
-            img.alt = card.name;
+            // 使用createCardImage函数，自动包含悬停事件
+            const img = createCardImage(card, cardClass);
             img.className = 'completion-card-image';
             img.style.cssText = `
                 width: 95px; /* 减小卡牌宽度 */
@@ -347,16 +499,22 @@ function displayDeck(deck, selectedClass, container, isModal = false) {
             };
             
             // 鼠标悬停效果
-            img.addEventListener('mouseenter', function() {
+            img.addEventListener('mouseenter', function(event) {
+                cardTooltip.show(card, cardClass, event);
                 this.style.transform = 'translateY(-6px) scale(1.08)';
                 this.style.boxShadow = '0 12px 25px rgba(0, 0, 0, 0.9)';
                 this.style.zIndex = '100';
             });
             
             img.addEventListener('mouseleave', function() {
+                cardTooltip.hide();
                 this.style.transform = '';
                 this.style.boxShadow = '0 5px 15px rgba(0, 0, 0, 0.7)';
                 this.style.zIndex = '1';
+            });
+            
+            img.addEventListener('mousemove', function(event) {
+                cardTooltip.positionTooltip(event);
             });
             
             const countElement = document.createElement('div');
