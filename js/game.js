@@ -1,23 +1,4 @@
-
 // 游戏主逻辑
-
-// 创建卡牌图片元素（本地版本，确保可用）
-function createCardImage(card, className) {
-    const img = document.createElement('img');
-    const cardClass = card.class || className;
-    const imagePath = `images/${cardClass}/${card.name}.png`;
-    
-    img.src = imagePath;
-    img.alt = card.name;
-    img.className = 'card-image';
-    
-    img.onerror = function() {
-        console.warn(`卡牌图片加载失败: ${imagePath}`);
-        this.style.backgroundColor = '#333355';
-    };
-    
-    return img;
-}
 
 // 游戏状态
 const gameState = {
