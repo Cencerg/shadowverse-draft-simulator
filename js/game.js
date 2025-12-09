@@ -25,12 +25,9 @@ let viewDeckButton, restartButton, currentClassName, roundInfo;
 let leftSide, rightSide, leftCardsContainer, rightCardsContainer;
 let deckDisplayContainer, deckDisplayContent;
 let closeDeckButton, deckModal, modalDeckContent, closeModal;
-
-// 封面卡牌元素
-let coverCard1, coverCard2;
-
-// 页面过渡遮罩层
-let pageTransitionOverlay;
+let coverCard1, coverCard2; // 封面卡牌元素
+let pageTransitionOverlay; // 页面过渡遮罩层
+let qrcodeButton; // 二维码按钮
 
 // 初始化
 document.addEventListener('DOMContentLoaded', function() {
@@ -141,6 +138,9 @@ function initializeDOMElements() {
     // 封面卡牌元素
     coverCard1 = document.getElementById('coverCard1');
     coverCard2 = document.getElementById('coverCard2');
+    
+    // 二维码按钮
+    qrcodeButton = document.getElementById('qrcodeButton');
 }
 
 // 设置事件监听器
@@ -213,6 +213,39 @@ function setupEventListeners() {
     });
     
     restartButton.addEventListener('click', resetGame);
+    
+    // 二维码按钮点击事件
+    qrcodeButton.addEventListener('click', jumpToQRCode);
+}
+
+// 跳转至二维码生成网站
+function jumpToQRCode() {
+    // 职业序号映射
+    const classIndexMap = {
+        "妖精": 1,
+        "皇家护卫": 2,
+        "巫师": 3,
+        "龙族": 4,
+        "死灵法师": 5,
+        "血族": 6,
+        "主教": 7,
+        "复仇者": 8
+    };
+    
+    // 获取当前职业序号
+    const classCode = classIndexMap[gameState.selectedClass];
+    
+    // 构建卡组代码字符串
+    const cardCodes = gameState.deck.map(card => card.code || "0").join(".");
+    
+    // 构建完整的 deck_hash 参数
+    const deckHash = `2.${classCode}.${cardCodes}`;
+    
+    // 构建完整URL
+    const url = `https://shadowverse-wb.com/web/DeckBuilder/makeQrCode?deck_hash=${deckHash}&lang=chs`;
+    
+    // 在新窗口或标签页中打开链接
+    window.open(url, '_blank');
 }
 
 // 切换职业（带动画）
@@ -732,6 +765,7 @@ function updateDeckInfo() {
         showCompletion();
     }
 }
+
 // 显示完成界面
 function showCompletion() {
     // 隐藏所有不必要的元素
@@ -750,10 +784,24 @@ function showCompletion() {
     confirmButton.style.display = 'none';
     viewDeckButton.style.display = 'none';
     
-    // 显示重新开始按钮，并放在顶部
+    // 显示重新开始按钮和二维码按钮，并放在同一行
     restartButton.style.display = 'flex';
-    restartButton.style.margin = '20px auto'; // 居中显示
-    restartButton.style.order = '-1'; // 确保按钮在顶部
+    qrcodeButton.style.display = 'flex';
+    
+    // 创建按钮容器（如果不存在）
+    let completionButtonsContainer = document.querySelector('.completion-buttons-container');
+    if (!completionButtonsContainer) {
+        completionButtonsContainer = document.createElement('div');
+        completionButtonsContainer.className = 'completion-buttons-container';
+        
+        // 将按钮容器插入到卡组展示容器的前面
+        deckDisplayContainer.parentNode.insertBefore(completionButtonsContainer, deckDisplayContainer);
+    }
+    
+    // 清空容器并添加按钮
+    completionButtonsContainer.innerHTML = '';
+    completionButtonsContainer.appendChild(restartButton);
+    completionButtonsContainer.appendChild(qrcodeButton);
     
     // 调整显示容器的大小和位置 - 修复：防止出现水平滚动条
     deckDisplayContainer.style.cssText = `
@@ -763,7 +811,7 @@ function showCompletion() {
         border-radius: 12px;
         background: rgba(26, 26, 58, 0.95);
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
-        max-height: 85vh;
+        max-height: 80vh; /* 减小高度，为按钮留出空间 */
         overflow-y: auto;
         overflow-x: hidden; /* 防止水平滚动 */
         width: 100%;
@@ -791,7 +839,7 @@ function showCompletion() {
     roundInfo.style.fontSize = '1.6rem';
     roundInfo.style.fontWeight = 'bold';
     roundInfo.style.marginTop = '10px';
-    roundInfo.style.marginBottom = '20px';
+    roundInfo.style.marginBottom = '15px';
     roundInfo.style.textAlign = 'center';
     roundInfo.style.textShadow = '0 0 10px rgba(255, 215, 0, 0.5)';
     
@@ -800,10 +848,12 @@ function showCompletion() {
         deckDisplayContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
 }
+
 // 显示模态框卡组
 function displayModalDeck() {
     displayDeck(gameState.deck, gameState.selectedClass, modalDeckContent, true);
 }
+
 // 重置游戏
 function resetGame() {
     // 显示页面过渡动画
@@ -835,6 +885,13 @@ function resetGame() {
         confirmButton.style.display = '';
         viewDeckButton.style.display = '';
         restartButton.style.display = 'none'; // 隐藏重新开始按钮
+        qrcodeButton.style.display = 'none'; // 隐藏二维码按钮
+        
+        // 移除按钮容器
+        const completionButtonsContainer = document.querySelector('.completion-buttons-container');
+        if (completionButtonsContainer) {
+            completionButtonsContainer.remove();
+        }
         
         // 重置轮次信息
         roundInfo.textContent = `第 1 轮 / 共 ${GAME_CONFIG.maxRounds} 轮`;
