@@ -2040,7 +2040,19 @@ body.cover-mode::before {
         justify-content: center;
     }
 }
-/* 在 style.css 文件的合适位置添加以下样式 */
+
+/* 二维码跳转按钮样式 */
+.qrcode-button {
+    background: linear-gradient(90deg, rgba(0, 188, 212, 0.1), rgba(0, 151, 167, 0.85)); /* 青色系 */
+    color: white;
+    display: none; /* 默认隐藏 */
+    margin: 20px auto;
+}
+
+.qrcode-button:hover {
+    background: linear-gradient(90deg, rgba(38, 198, 218, 0.1), rgba(0, 172, 193, 0.9));
+    transform: scale(1.05);
+}
 
 /* 完成界面的卡牌网格样式 - 扩大卡牌尺寸 */
 .completion-cards-grid {
@@ -2564,4 +2576,73 @@ body.cover-mode::before {
     color: #F7FC63; /* 【】内字的颜色 */
     font-weight: bold;
     text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+/* 完成界面按钮容器样式 - 添加在文件末尾 */
+.completion-buttons-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin: 15px 0 10px 0;
+    padding: 0 10px;
+}
+
+/* 重新开始按钮样式调整 */
+#restartButton {
+    background: linear-gradient(90deg, rgba(255, 152, 0, 0.1), rgba(245, 124, 0, 0.85));
+    color: white;
+    display: none;
+    width: 48%;
+    margin: 0;
+    justify-content: center;
+}
+
+#restartButton:hover {
+    background: linear-gradient(90deg, rgba(255, 183, 77, 0.1), rgba(255, 152, 0, 0.9));
+    transform: scale(1.05);
+}
+
+/* 二维码按钮样式调整 */
+#qrcodeButton {
+    background: linear-gradient(90deg, rgba(0, 188, 212, 0.1), rgba(0, 151, 167, 0.85));
+    color: white;
+    display: none;
+    width: 48%;
+    margin: 0;
+    justify-content: center;
+}
+
+#qrcodeButton:hover {
+    background: linear-gradient(90deg, rgba(38, 198, 218, 0.1), rgba(0, 172, 193, 0.9));
+    transform: scale(1.05);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .completion-buttons-container {
+        flex-direction: row;
+        justify-content: space-between;
+        margin: 12px 0 8px 0;
+        padding: 0 8px;
+    }
+    
+    #restartButton, #qrcodeButton {
+        width: 48%;
+        padding: 10px 12px;
+        font-size: 0.95rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .completion-buttons-container {
+        flex-direction: row;
+        margin: 10px 0 6px 0;
+        padding: 0 5px;
+    }
+    
+    #restartButton, #qrcodeButton {
+        width: 48%;
+        padding: 8px 10px;
+        font-size: 0.9rem;
+    }
 }
